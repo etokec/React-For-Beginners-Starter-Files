@@ -2,8 +2,10 @@ import React from 'react';
 import Header from './Header';
 import Order from './Order';
 import Inventory from './Inventory';
-import Fish from './Fish';
 import fishes from '../sample-fishes';
+import Fish from './Fish';
+import base from '../base';
+
 
 // The actual state and the method that 
 //updates it needs to live in the same component
@@ -14,6 +16,41 @@ class App extends React.Component{
 		fishes : {},
 		order : {}
 	};
+
+	// Life cycle method
+	componentDidMount() {
+		const { params } = this.props.match;
+		// first reinstate our local storage
+		// console.log(params.storeId);
+		
+		const localStorageRef = localStorage.getItem(params.storeId);	
+		
+		if(localStorageRef){
+			// console.log(JSON.parse(localStorageRef))
+			this.setState({ order: JSON.parse(localStorageRef) });
+		}
+
+		this.ref = base.syncState(`${params.storeId}/fishes`, {
+			context : this,
+			state : 'fishes'
+		});
+	}
+
+
+  componentDidUpdate() {
+  	const { params } = this.props.match;
+      localStorage.setItem(
+      params.storeId,     
+      JSON.stringify(this.state.order)
+    );
+    
+  }
+
+	componentWillUnmount() {
+
+		base.removeBinding(this.ref);
+	}
+
 
 	addFish = (fish) => {
 		// 1. Take a copy of existing state
@@ -59,7 +96,9 @@ class App extends React.Component{
 				</div>
 					 <Order fishes={this.state.fishes} order={this.state.order} /> 
 					 <Inventory addFish={this.addFish}
-					 			 loadSampleFishes={this.loadSampleFishes} /> 
+					 			 loadSampleFishes={this.loadSampleFishes} 
+					 			 fishes = {this.state.fishes}
+					 /> 
 					 
 			</div>
 			)
